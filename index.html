@@ -15,27 +15,27 @@
         .loading {
             height: 100vh;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             flex-direction: column;
         }
         .avatar {
             width: 80px;
             height: 80px;
+            border-radius: 20px;
             background: #0d6efd;
             color: white;
-            border-radius: 20px;
-            font-size: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: auto;
+            font-size: 32px;
+            font-weight: bold;
         }
         .card-box {
             background: white;
+            padding: 14px;
             border-radius: 14px;
-            padding: 16px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,.05);
         }
     </style>
@@ -56,13 +56,13 @@ async function carregar() {
     const codigo = params.get("codigo");
 
     if (!codigo) {
-        mostrarMensagem("Código não informado.", true);
+        mostrarErro("Código não informado.");
         return;
     }
 
     try {
-        const resposta = await fetch(`${API_URL}?codigo=${codigo}`);
-        const data = await resposta.json();
+        const res = await fetch(`${API_URL}?codigo=${codigo}`);
+        const data = await res.json();
 
         if (!data || data.status === "NAO_ENCONTRADO" || data.status === "SEM_DADOS") {
             mostrarCadastro();
@@ -77,44 +77,49 @@ async function carregar() {
         renderizarDados(data.dados);
 
     } catch (e) {
-        mostrarErro("Falha ao conectar com o servidor.");
+        mostrarErro("Erro ao conectar com o servidor.");
     }
 }
 
 function renderizarDados(dados) {
     const app = document.getElementById("app");
 
-    app.innerHTML = `
+    const nome = dados["Nome da criança"] || "Criança";
+    const telefone = dados["WhatsApp"] || dados["Telefone"] || "";
+    const idade = dados["Idade"] || "";
+
+    let html = `
         <div class="text-center mb-3">
-            <div class="avatar">${dados["Nome da criança"].charAt(0)}</div>
-            <h3 class="mt-2">${dados["Nome da criança"]}</h3>
-        </div>
-
-        <div class="container">
-            ${Object.entries(dados).map(([k, v]) => `
-                <div class="card-box">
-                    <small class="text-muted">${k}</small>
-                    <div class="fw-bold">${v}</div>
-                </div>
-            `).join("")}
+            <div class="avatar">${nome.charAt(0)}</div>
+            <h3 class="mt-2">${nome}</h3>
         </div>
     `;
-}
 
-function mostrarCadastro() {
-    document.getElementById("app").innerHTML = `
+    if (idade) {
+        html += `<p class="text-center"><strong>Idade:</strong> ${idade}</p>`;
+    }
+
+    if (telefone) {
+        html += `
+            <a class="btn btn-success w-100 mb-2" 
+               href="https://wa.me/55${telefone.replace(/\D/g, '')}">
+               📞 Chamar responsável
+            </a>`;
+    }
+
+    html += `
         <div class="text-center">
-            <h4 class="text-danger">Pulseira não cadastrada</h4>
-            <p>Este código ainda não possui informações.</p>
-            <a href="https://tally.so/r/pbd5zy" class="btn btn-primary mt-2">Cadastrar agora</a>
+            <a href="https://tally.so/r/pbd5zy" class="btn btn-outline-secondary">Editar cadastro</a>
         </div>
     `;
+
+    document.getElementById("app").innerHTML = html;
 }
 
 function mostrarErro(msg) {
     document.getElementById("app").innerHTML = `
         <div class="text-center text-danger">
-            <p>${msg}</p>
+            <h4>${msg}</h4>
         </div>
     `;
 }
@@ -124,4 +129,3 @@ carregar();
 
 </body>
 </html>
-
