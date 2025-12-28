@@ -55,7 +55,7 @@
         const obs = dados["Observações da criança"] || "";
         
         // Tel Responsável 1 para o botão principal
-        let tel1Raw = String(dados["WhatsApp ou Telefone Responsavel 1"] || "").replace(/\D/g, "");
+        let tel1Raw = String(dados["Contato Responsavel 1"] || "").replace(/\D/g, "");
 
         let infoCardsHtml = "";
         const ocultar = ["Nome da criança", "Idade", "Sexo", "Observações da criança", "Código da Pulseira", "Submission ID", "Respondent ID", "Submitted at"];
@@ -163,3 +163,4 @@
 </script>
 </body>
 </html>
+
