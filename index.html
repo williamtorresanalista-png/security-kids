@@ -8,142 +8,103 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
         body { background-color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; color: #1e293b; }
-        .loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; }
-        .avatar { width: 75px; height: 75px; background: #0f172a; color: white; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 35px; font-weight: 800; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .card-info { border-radius: 15px; border: 1px solid #e2e8f0 !important; margin-bottom: 8px; background: #fff; }
-        .label-custom { font-size: 0.8rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0px; }
-        .value-custom { font-size: 1.25rem; font-weight: 700; color: #0f172a; line-height: 1.2; }
-        .btn-whatsapp { background-color: #22c55e; color: white; border-radius: 12px; font-size: 1.1rem; padding: 14px; font-weight: 700; border: none; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2); }
-        .actions-footer { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.98); padding: 12px 18px 25px 18px; border-radius: 20px 20px 0 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.04); }
-        .alert-warning-custom { background-color: #fefce8; border-left: 4px solid #eab308; border-radius: 10px; padding: 12px; margin-bottom: 15px; }
+        .loading-screen { position: fixed; inset: 0; background: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .avatar { width: 75px; height: 75px; background: #0f172a; color: white; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 35px; font-weight: 800; }
+        .card-info { border-radius: 15px; border: 1px solid #e2e8f0; background: #fff; }
+        .btn-whatsapp { background-color: #22c55e; color: #fff; font-weight: 700; }
     </style>
 </head>
+
 <body>
 
 <div id="loading" class="loading-screen">
-    <div class="spinner-border text-primary spinner-border-sm mb-2"></div>
-    <span class="small fw-bold text-muted">Acessando Dados...</span>
+    <div class="spinner-border text-primary mb-2"></div>
+    <span class="small fw-bold text-muted">Carregando...</span>
 </div>
 
-<div id="app" style="display:none; padding-bottom: 160px;"></div>
+<div id="app" style="display:none; padding-bottom:160px;"></div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxpcXWSLYw4Mtxq59FPY-jaFPYvWEjVk595cUwiKfsuxJl5M3wdr_JhXXRyC0swEZz2Eg/exec";
+const API_URL = "https://script.google.com/macros/s/SEU_ENDPOINT_AQUI/exec";
 
-    async function carregarDados() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const codigo = urlParams.get('codigo');
-        if (!codigo) { mostrarErro("ACESSO INVÁLIDO", "Código não detectado."); return; }
-        try {
-            const response = await fetch(`${API_URL}?codigo=${codigo}`, { method: 'GET', cache: 'no-store', redirect: 'follow' });
-            const data = await response.json();
-            if (data.error) { mostrarErro("ERRO", "Pulseira não localizada."); return; }
-            renderizarApp(data);
-        } catch (e) { mostrarErro("CONEXÃO", "Falha ao carregar."); }
+async function carregarDados() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const codigo = urlParams.get('codigo');
+
+    if (!codigo) {
+        mostrarCadastro();
+        return;
     }
 
-    function renderizarApp(data) {
-        const app = document.getElementById('app');
-        
-        // --- MAPEAMENTO EXATO DOS SEUS CAMPOS ---
-        const nome = data["Nome da criança"] || "Criança";
-        const idadeVal = data["Idade"] ? data["Idade"] + " anos" : "";
-        const sexoVal = data["Sexo"] || "";
-        const obs = data["Observações da criança"] || "";
-        
-        // Buscando o telefone principal (Responsável 1)
-        let telRaw = String(data["WhatsApp ou Telefone Responsavel 1"] || "").replace(/\D/g, "");
-        if (telRaw.length > 0 && !telRaw.startsWith('55')) {
-            telRaw = '55' + telRaw;
+    try {
+        const res = await fetch(`${API_URL}?codigo=${codigo}`);
+        const data = await res.json();
+
+        // Caso 1: código inexistente ou inválido
+        if (data.error) {
+            mostrarCadastro();
+            return;
         }
 
-        let infoHtml = "";
-        // Lista de campos que NÃO devem aparecer nos cartões de detalhes (porque já estão no topo ou são internos)
-        const ocultar = [
-            "Nome da criança", "Observações da criança", "Idade", "Sexo", 
-            "Código da Pulseira", "Submission ID", "Respondent ID", "Submitted at"
-        ];
-        
-        for (let key in data) {
-            // Se o campo tem valor e não está na lista de ocultar
-            if (data[key] && !ocultar.includes(key)) {
-                infoHtml += `
-                    <div class="card card-info">
-                        <div class="card-body p-2 px-3">
-                            <div class="label-custom">${key}</div>
-                            <div class="value-custom">${data[key]}</div>
-                        </div>
-                    </div>`;
-            }
+        // Caso 2: código existe, mas sem dados cadastrados
+        if (!data["Nome da criança"] || data["Nome da criança"].trim() === "") {
+            mostrarCadastro();
+            return;
         }
 
-        app.innerHTML = `
-            <div class="text-center py-3 bg-white mb-3 shadow-sm">
-                <div class="avatar">${nome.charAt(0)}</div>
-                <h3 class="fw-bold mt-2 mb-0" style="font-size: 1.7rem;">${nome}</h3>
-                <div class="d-flex justify-content-center gap-2 mt-1">
-                    ${idadeVal ? `<span class="badge bg-dark" style="font-size: 0.85rem; border-radius: 20px;">${idadeVal}</span>` : ''}
-                    ${sexoVal ? `<span class="badge bg-secondary" style="font-size: 0.85rem; border-radius: 20px;">${sexoVal}</span>` : ''}
-                </div>
-                <p class="text-muted extra-small text-uppercase fw-bold m-0 mt-2" style="font-size: 0.65rem; letter-spacing: 1px;">Security Kids - Ativa</p>
-            </div>
-            
-            <div class="container px-3">
-                ${obs ? `
-                    <div class="alert-warning-custom">
-                        <small class="fw-bold text-uppercase d-block mb-1" style="font-size: 0.75rem;">⚠️ Cuidados Especiais</small>
-                        <div class="fw-bold" style="font-size: 1.1rem; line-height: 1.3;">${obs}</div>
-                    </div>` : ''}
-                ${infoHtml}
-            </div>
+        renderizarDados(data);
 
-            <div class="actions-footer">
-                <button class="btn btn-whatsapp w-100 mb-2" onclick="enviarLocalizacao('${telRaw}', '${nome}')">
-                    <i class="bi bi-whatsapp"></i> AVISAR RESPONSÁVEL
-                </button>
-                <div class="row g-2">
-                    <div class="col-6"><a href="tel:190" class="btn btn-outline-danger btn-sm w-100 py-2 fw-bold" style="font-size: 0.85rem;">POLÍCIA 190</a></div>
-                    <div class="col-6"><a href="https://tally.so/r/pbd5zy" class="btn btn-outline-secondary btn-sm w-100 py-2 fw-bold" style="font-size: 0.85rem;">EDITAR</a></div>
-                </div>
-            </div>
-        `;
-        document.getElementById('loading').style.display = 'none';
-        app.style.display = 'block';
+    } catch (e) {
+        mostrarErro("Erro ao conectar com o servidor.");
     }
+}
 
-    function enviarLocalizacao(tel, nome) {
-        if (!tel || tel.length < 10) { 
-            alert("Erro: Número do Responsável 1 não encontrado ou incompleto na planilha."); 
-            return; 
-        }
+function renderizarDados(data) {
+    const app = document.getElementById("app");
 
-        const btn = document.querySelector('.btn-whatsapp');
-        const originalHtml = btn.innerHTML;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> LOCALIZANDO...';
-        
-        const msg = `Achei seu filho(a) ${nome} através da Pulseira Security Kids. Segue minha localização:`;
-        const linkWa = `https://wa.me/${tel}?text=${encodeURIComponent(msg)}`;
+    const nome = data["Nome da criança"];
+    const obs = data["Observações da criança"] || "";
 
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition((pos) => {
-                const lat = pos.coords.latitude;
-                const lon = pos.coords.longitude;
-                // CORREÇÃO DEFINITIVA DO SÍMBOLO $ PARA O GPS
-                const mapa = `\n\n📍 Mapa: https://www.google.com/maps?q=${lat},${lon}`;
-                window.location.href = linkWa + encodeURIComponent(mapa);
-            }, () => { 
-                window.location.href = linkWa; 
-            }, { timeout: 6000 });
-        } else { 
-            window.location.href = linkWa; 
-        }
-    }
+    app.innerHTML = `
+        <div class="text-center py-3">
+            <div class="avatar">${nome.charAt(0)}</div>
+            <h3 class="mt-2 fw-bold">${nome}</h3>
+        </div>
 
-    function mostrarErro(titulo, subtitulo) {
-        document.getElementById('loading').innerHTML = `<div class="text-center p-4 small"><h6 class="text-danger fw-bold">${titulo}</h6><p>${subtitulo}</p></div>`;
-    }
+        <div class="container px-3">
+            ${obs ? `
+            <div class="alert alert-warning">
+                <strong>Observações:</strong> ${obs}
+            </div>` : ""}
+        </div>
+    `;
 
-    carregarDados();
+    document.getElementById("loading").style.display = "none";
+    app.style.display = "block";
+}
+
+function mostrarCadastro() {
+    document.getElementById("loading").innerHTML = `
+        <div class="text-center p-4">
+            <h4 class="fw-bold text-danger mb-2">Pulseira não cadastrada</h4>
+            <p class="text-muted mb-3">Este código ainda não possui dados vinculados.</p>
+            <a href="https://tally.so/r/pbd5zy" class="btn btn-primary fw-bold px-4 py-2">
+                Cadastrar agora
+            </a>
+        </div>
+    `;
+}
+
+function mostrarErro(msg) {
+    document.getElementById("loading").innerHTML = `
+        <div class="text-center p-4">
+            <h4 class="fw-bold text-danger">${msg}</h4>
+        </div>
+    `;
+}
+
+carregarDados();
 </script>
+
 </body>
 </html>
