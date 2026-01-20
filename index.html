@@ -128,7 +128,7 @@
                 (pos) => {
                     const lat = pos.coords.latitude;
                     const lon = pos.coords.longitude;
-                    const mapa = `\n\nMinha localização atual: https://www.google.com/maps?q=$${lat},${lon}`;
+                    const mapa = `\n\nMinha localização atual: https://www.google.com/maps?q=${lat},${lon}`;
                     abrirWhatsApp(tel, msgBase + mapa);
                     btn.innerHTML = originalText;
                     btn.disabled = false;
@@ -166,3 +166,4 @@
 </script>
 </body>
 </html>
+
