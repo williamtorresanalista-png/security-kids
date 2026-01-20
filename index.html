@@ -38,7 +38,7 @@
     async function carregarDados() {
         const urlParams = new URLSearchParams(window.location.search);
         const codigo = urlParams.get('codigo');
-        if (!codigo) { mostrarErro("ACESSO INVÁLIDO", "Código não detectADO."); return; }
+        if (!codigo) { mostrarErro("ACESSO INVÁLIDO", "Código não detectado."); return; }
         try {
             const response = await fetch(`${API_URL}?codigo=${codigo}`);
             const data = await response.json();
@@ -113,8 +113,7 @@
                     <i class="bi bi-whatsapp"></i> AVISAR RESPONSÁVEL
                 </button>
                 <div class="row g-2">
-                    <div class="col-6"><a href="tel:190" class="btn btn-outline-danger w-100 py-2 fw-bold" style="border-radius: 12px;">POLÍCIA 190</a></div>
-                    <div class="col-6"><a href="https://tally.so/r/pbd5zy" class="btn btn-outline-secondary w-100 py-2 fw-bold" style="border-radius: 12px;">EDITAR</a></div>
+                    <div class="col-12"><a href="tel:190" class="btn btn-outline-danger w-100 py-2 fw-bold" style="border-radius: 12px;">POLÍCIA 190</a></div>
                 </div>
             </div>
         `;
@@ -135,7 +134,7 @@
                 (pos) => {
                     const lat = pos.coords.latitude;
                     const lon = pos.coords.longitude;
-                    const mapa = `\n\nMinha localização atual: https://www.google.com/maps?q=${lat},${lon}`;
+                    const mapa = `\n\nMinha localização atual: https://www.google.com/maps?q=$${lat},${lon}`;
                     abrirWhatsApp(tel, msgBase + mapa);
                     btn.innerHTML = originalText;
                     btn.disabled = false;
@@ -164,7 +163,6 @@
                 <i class="bi bi-exclamation-octagon text-danger" style="font-size: 3rem;"></i>
                 <h5 class="text-danger fw-bold mt-2">${titulo}</h5>
                 <p>${subtitulo}</p>
-                <a href="https://tally.so/r/pbd5zy" class="btn btn-primary btn-sm">Criar Cadastro</a>
             </div>`;
     }
 
