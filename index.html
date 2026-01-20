@@ -54,7 +54,6 @@
         const sexo = dados["Sexo"] || "";
         const obs = dados["Observações da criança"] || "";
         
-        // CORREÇÃO: Busca o telefone usando o nome exato da coluna da planilha
         let tel1Raw = String(dados["WhatsApp ou Telefone Responsavel 1"] || "").replace(/\D/g, "");
 
         let infoCardsHtml = "";
@@ -65,15 +64,9 @@
                 let valor = dados[chave];
                 let labelExibicao = chave;
 
-                // ALTERAÇÃO DE DESCRIÇÃO DOS CAMPOS
-                if (chave === "WhatsApp ou Telefone Responsavel 1") {
-                    labelExibicao = "Contato Responsavel 1";
-                }
-                if (chave === "WhatsApp ou Telefone Responsavel 2") {
-                    labelExibicao = "Contato Responsavel 2";
-                }
+                if (chave === "WhatsApp ou Telefone Responsavel 1") { labelExibicao = "Contato Responsavel 1"; }
+                if (chave === "WhatsApp ou Telefone Responsavel 2") { labelExibicao = "Contato Responsavel 2"; }
                 
-                // Se for um campo de contato, transforma em link de ligação
                 if (chave.toLowerCase().includes("whatsapp ou telefone")) {
                     const telLimpo = String(valor).replace(/\D/g, "");
                     valor = `<a href="tel:${telLimpo}" class="tel-link"><i class="bi bi-telephone-fill me-1"></i> ${valor}</a>`;
@@ -89,6 +82,7 @@
             }
         }
 
+        // TELA DE PERFIL (SEM BOTÃO EDITAR)
         app.innerHTML = `
             <div class="header-box">
                 <div class="avatar">${nome.charAt(0).toUpperCase()}</div>
@@ -157,12 +151,14 @@
         window.location.href = `https://wa.me/${tel}?text=${encodeURIComponent(texto)}`;
     }
 
+    // TELA DE ERRO (COM BOTÃO DE CRIAR CADASTRO)
     function mostrarErro(titulo, subtitulo) {
         document.getElementById('loading').innerHTML = `
             <div class="text-center p-4">
                 <i class="bi bi-exclamation-octagon text-danger" style="font-size: 3rem;"></i>
                 <h5 class="text-danger fw-bold mt-2">${titulo}</h5>
                 <p>${subtitulo}</p>
+                <a href="https://tally.so/r/pbd5zy" class="btn btn-primary btn-sm mt-3">Criar Cadastro</a>
             </div>`;
     }
 
